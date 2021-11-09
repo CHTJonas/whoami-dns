@@ -1,4 +1,4 @@
-package main
+package whoami
 
 import (
 	"context"
@@ -14,17 +14,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type server struct {
+type Server struct {
 	store sync.Map
 	web   *http.Server
 }
 
-func newServer() *server {
-	s := &server{}
-	return s
-}
-
-func (s *server) Write(p []byte) (n int, err error) {
+func (s *Server) Write(p []byte) (n int, err error) {
 	str := string(p)
 	parts := strings.Split(str, " ")
 	ip := parts[2]
@@ -36,7 +31,7 @@ func (s *server) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func (s *server) whoamiEndpoint(w http.ResponseWriter, r *http.Request) {
+func (s *Server) whoamiEndpoint(w http.ResponseWriter, r *http.Request) {
 	ip := r.Header["X-Forwarded-For"][0]
 	if ip == "" {
 		ip = r.RemoteAddr
@@ -74,8 +69,8 @@ func headerMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (s *server) openSocket() {
-	input, err := dnstap.NewFrameStreamSockInputFromPath("/var/lib/knot/dnstap.sock")
+func (s *Server) OpenSocket(path string) {
+	input, err := dnstap.NewFrameStreamSockInputFromPath(path)
 	if err != nil {
 		panic(err)
 	}
@@ -84,12 +79,12 @@ func (s *server) openSocket() {
 	input.ReadInto(output.GetOutputChannel())
 }
 
-func (s *server) start() {
+func (s *Server) Start(port string) {
 	router := mux.NewRouter()
 	router.HandleFunc("/", s.whoamiEndpoint).Methods("GET")
 	router.Use(headerMiddleware)
 
-	s.web = &http.Server{Addr: ":6780", Handler: router}
+	s.web = &http.Server{Addr: ":" + port, Handler: router}
 	go func() {
 		if err := s.web.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fmt.Println("HTTP server error:", err)
@@ -99,7 +94,7 @@ func (s *server) start() {
 	fmt.Println("HTTP server listening on", s.web.Addr)
 }
 
-func (s *server) stop() {
+func (s *Server) Stop() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	fmt.Println("Waiting up to 30 seconds for HTTP server to shutdown")
