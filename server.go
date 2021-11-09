@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	dnstap "github.com/dnstap/golang-dnstap"
 	"github.com/gorilla/mux"
 )
 
@@ -71,6 +72,16 @@ func headerMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (s *server) openSocket() {
+	input, err := dnstap.NewFrameStreamSockInputFromPath("/var/lib/knot/dnstap.sock")
+	if err != nil {
+		panic(err)
+	}
+	output := dnstap.NewTextOutput(s, dnstap.TextFormat)
+	go output.RunOutputLoop()
+	input.ReadInto(output.GetOutputChannel())
 }
 
 func (s *server) start() {
