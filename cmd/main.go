@@ -24,6 +24,9 @@ var rootCmd = &cobra.Command{
 		"be identified by the source IP addresses of their queries.",
 	Run: func(cmd *cobra.Command, args []string) {
 		serv := whoami.NewServer()
+		serv.SetHeader("Server", "https://github.com/CHTJonas/whoami-dns")
+		serv.SetHeader("X-Version", version)
+
 		serv.OpenSocket(sockPath)
 		serv.Start(webPort)
 

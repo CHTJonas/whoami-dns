@@ -19,11 +19,13 @@ type Server struct {
 	web *http.Server
 	in  *dnstap.FrameStreamSockInput
 	out *dnstap.TextOutput
+	mwf []mux.MiddlewareFunc
 }
 
 func NewServer() *Server {
 	return &Server{
 		bin: cache.New(30*time.Second, 2*time.Minute),
+		mwf: []mux.MiddlewareFunc{headerMiddleware},
 	}
 }
 
@@ -70,10 +72,18 @@ func (s *Server) whoamiEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func headerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Server", "https://github.com/CHTJonas/whoami-dns")
 		w.Header().Set("Cache-Control", "no-store, max-age=0")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) SetHeader(name, value string) {
+	s.mwf = append(s.mwf, func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set(name, value)
+			next.ServeHTTP(w, r)
+		})
 	})
 }
 
@@ -97,7 +107,7 @@ func (s *Server) CloseSocket() {
 func (s *Server) Start(port string) {
 	router := mux.NewRouter()
 	router.HandleFunc("/", s.whoamiEndpoint).Methods("GET")
-	router.Use(headerMiddleware)
+	router.Use(s.mwf...)
 
 	s.web = &http.Server{
 		Addr:        ":" + port,
