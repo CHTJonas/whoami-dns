@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/dnstap/golang-dnstap v0.4.0
 	github.com/gorilla/mux v1.8.0
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/spf13/cobra v1.2.1
 )
 

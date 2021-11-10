@@ -7,16 +7,22 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	dnstap "github.com/dnstap/golang-dnstap"
 	"github.com/gorilla/mux"
+	"github.com/patrickmn/go-cache"
 )
 
 type Server struct {
-	store sync.Map
-	web   *http.Server
+	bin *cache.Cache
+	web *http.Server
+}
+
+func NewServer() *Server {
+	return &Server{
+		bin: cache.New(30*time.Second, 2*time.Minute),
+	}
 }
 
 func (s *Server) Write(p []byte) (n int, err error) {
@@ -27,7 +33,7 @@ func (s *Server) Write(p []byte) (n int, err error) {
 	hostname = strings.Trim(hostname, `"`)
 	hostname = strings.TrimSuffix(hostname, ".")
 	fmt.Println("DNS query for", hostname, "from", ip)
-	s.store.Store(hostname, ip)
+	s.bin.SetDefault(hostname, ip)
 	return len(p), nil
 }
 
@@ -47,7 +53,7 @@ func (s *Server) whoamiEndpoint(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("HTTP request for", h, "from", ip)
 
 	for i := 0; i < 5; i++ {
-		body, found := s.store.Load(h)
+		body, found := s.bin.Get(h)
 		if found {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(body.(string) + "\n"))

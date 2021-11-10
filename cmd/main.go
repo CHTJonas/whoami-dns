@@ -23,7 +23,7 @@ var rootCmd = &cobra.Command{
 		"server using dnstap and wildcard domains so that clients' recursive DNS servers can " +
 		"be identified by the source IP addresses of their queries.",
 	Run: func(cmd *cobra.Command, args []string) {
-		serv := new(whoami.Server)
+		serv := whoami.NewServer()
 		go serv.OpenSocket(sockPath)
 		serv.Start(webPort)
 
