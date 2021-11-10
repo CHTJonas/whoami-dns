@@ -52,14 +52,14 @@ func (s *Server) whoamiEndpoint(w http.ResponseWriter, r *http.Request) {
 	h = strings.TrimSuffix(h, ".")
 	fmt.Println("HTTP request for", h, "from", ip)
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 20; i++ {
 		body, found := s.bin.Get(h)
 		if found {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(body.(string) + "\n"))
 			return
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	w.WriteHeader(http.StatusInternalServerError)
