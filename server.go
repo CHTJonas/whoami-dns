@@ -106,7 +106,7 @@ func (s *Server) CloseSocket() {
 
 func (s *Server) Start(port string) {
 	router := mux.NewRouter()
-	router.HandleFunc("/", s.whoamiEndpoint).Methods("GET")
+	router.HandleFunc("/", s.whoamiEndpoint).Methods("GET", "HEAD")
 	router.Use(s.mwf...)
 
 	s.web = &http.Server{
