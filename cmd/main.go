@@ -24,7 +24,7 @@ var rootCmd = &cobra.Command{
 		"be identified by the source IP addresses of their queries.",
 	Run: func(cmd *cobra.Command, args []string) {
 		serv := whoami.NewServer()
-		go serv.OpenSocket(sockPath)
+		serv.OpenSocket(sockPath)
 		serv.Start(webPort)
 
 		quit := make(chan os.Signal, 1)
@@ -32,6 +32,7 @@ var rootCmd = &cobra.Command{
 		signal.Notify(quit, syscall.SIGTERM)
 		<-quit
 
+		serv.CloseSocket()
 		serv.Stop()
 	},
 }

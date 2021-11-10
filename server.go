@@ -17,6 +17,8 @@ import (
 type Server struct {
 	bin *cache.Cache
 	web *http.Server
+	in  *dnstap.FrameStreamSockInput
+	out *dnstap.TextOutput
 }
 
 func NewServer() *Server {
@@ -81,8 +83,15 @@ func (s *Server) OpenSocket(path string) {
 		panic(err)
 	}
 	output := dnstap.NewTextOutput(s, dnstap.TextFormat)
+	s.in = input
+	s.out = output
 	go output.RunOutputLoop()
-	input.ReadInto(output.GetOutputChannel())
+	go input.ReadInto(output.GetOutputChannel())
+	fmt.Println("dnstap socket opened at", path)
+}
+
+func (s *Server) CloseSocket() {
+	s.out.Close()
 }
 
 func (s *Server) Start(port string) {
