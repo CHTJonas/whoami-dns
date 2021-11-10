@@ -90,7 +90,12 @@ func (s *Server) Start(port string) {
 	router.HandleFunc("/", s.whoamiEndpoint).Methods("GET")
 	router.Use(headerMiddleware)
 
-	s.web = &http.Server{Addr: ":" + port, Handler: router}
+	s.web = &http.Server{
+		Addr:        ":" + port,
+		Handler:     router,
+		ReadTimeout: 30 * time.Second,
+	}
+	s.web.SetKeepAlivesEnabled(false)
 	go func() {
 		if err := s.web.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fmt.Println("HTTP server error:", err)
