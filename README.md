@@ -1,4 +1,4 @@
-# whoami-dns
+# Whoami DNS
 
 whoami-dns is a clever webserver that runs the backend for https://debug.charliejonas.co.uk/dns.html. It's designed to work in tandem with an authoritative DNS server using [dnstap](https://dnstap.info) and wildcard domains so that clients' recursive DNS servers can be identified by the source IP addresses of their queries.
 
