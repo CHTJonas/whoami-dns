@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
+	"strings"
 	"syscall"
 
 	"github.com/CHTJonas/whoami-dns"
@@ -32,8 +34,9 @@ var rootCmd = &cobra.Command{
 		}
 
 		serv := whoami.NewServer()
-		serv.SetHeader("X-Powered-By", "https://github.com/CHTJonas/whoami-dns")
-		serv.SetHeader("X-Version", version)
+		pwrBy := fmt.Sprintf("whoami-dns/%s Go/%s (+https://github.com/CHTJonas/whoami-dns)",
+			version, strings.TrimPrefix(runtime.Version(), "go"))
+		serv.SetHeader("X-Powered-By", pwrBy)
 
 		serv.OpenSocket(sockPath)
 		serv.Start(webPort)
