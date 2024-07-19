@@ -36,6 +36,7 @@ func (s *Server) Write(p []byte) (n int, err error) {
 	hostname := parts[5]
 	hostname = strings.Trim(hostname, `"`)
 	hostname = strings.TrimSuffix(hostname, ".")
+	hostname = strings.ToLower(hostname)
 	fmt.Println("DNS query for", hostname, "from", ip)
 	s.bin.SetDefault(hostname, ip)
 	return len(p), nil
@@ -54,6 +55,7 @@ func (s *Server) whoamiEndpoint(w http.ResponseWriter, r *http.Request) {
 	h := u.Hostname()
 	h = strings.TrimSpace(h)
 	h = strings.TrimSuffix(h, ".")
+	h = strings.ToLower(h)
 	fmt.Println("HTTP request for", h, "from", ip)
 
 	for i := 0; i < 20; i++ {
